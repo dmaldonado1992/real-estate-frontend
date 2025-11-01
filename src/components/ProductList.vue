@@ -30,20 +30,14 @@
           v-for="product in products.items" 
           :key="product.id" 
           class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-          :class="{'opacity-0': isLoading}"
         >
-          <div class="relative">
-            <div class="w-full h-48 bg-gray-200 animate-pulse">
-              <img 
-                :src="product.imagen_url" 
-                :alt="product.titulo" 
-                class="w-full h-48 object-cover transition-opacity duration-300"
-                :class="{'opacity-0': !imageLoaded[product.id]}"
-                @load="handleImageLoad(product.id)"
-                loading="lazy"
-              >
-            </div>
-            <div class="absolute top-0 right-0 bg-blue-600 text-white px-3 py-1 m-2 rounded">
+          <div class="relative h-48">
+            <!-- Componente optimizado de imagen lazy -->
+            <LazyImage 
+              :src="product.imagen_url" 
+              :alt="product.titulo"
+            />
+            <div class="absolute top-0 right-0 bg-blue-600 text-white px-3 py-1 m-2 rounded shadow-lg">
               {{ formatPrice(product.precio) }}
             </div>
           </div>
@@ -61,7 +55,7 @@
                 Editar
               </router-link>
               <button 
-                @click="deleteProduct(product.id)" 
+                @click="handleDelete(product.id)" 
                 class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors duration-200"
               >
                 Eliminar
@@ -117,19 +111,24 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
-import { API_ENDPOINTS } from '../config/api'
+import { usePropertyService } from '../composables/usePropertyService'
+import { useFormatter } from '../composables/useFormatter'
+import LazyImage from './LazyImage.vue'
 
-const allProducts = ref([])
-const itemsPerPage = 20
+// Composables (Dependency Injection pattern en Vue 3)
+const { properties, loadProperties, deleteProperty, isLoading, error } = usePropertyService()
+const { formatPrice } = useFormatter()
+
+// Estado local del componente
+const itemsPerPage = 15
 const searchTerm = ref('')
 const currentPage = ref(1)
-const isLoading = ref(false)
-const imageLoaded = ref({})
 let searchTimeout = null
 
-const filteredProducts = computed(() => {
+// Computed properties para filtrado y paginación
+const filteredProperties = computed(() => {
   const searchLower = searchTerm.value.toLowerCase()
-  return allProducts.value.filter(product => 
+  return properties.value.filter(product => 
     product.titulo.toLowerCase().includes(searchLower) ||
     product.descripcion.toLowerCase().includes(searchLower) ||
     product.ubicacion.toLowerCase().includes(searchLower) ||
@@ -138,7 +137,7 @@ const filteredProducts = computed(() => {
 })
 
 const products = computed(() => {
-  const filtered = filteredProducts.value
+  const filtered = filteredProperties.value
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
   
@@ -150,74 +149,27 @@ const products = computed(() => {
   }
 })
 
-const handleImageLoad = (productId) => {
-  imageLoaded.value[productId] = true
-}
-
-const fetchProducts = async () => {
-  try {
-    isLoading.value = true
-    const response = await fetch(API_ENDPOINTS.PRODUCTS.LIST)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    allProducts.value = data
-    
-    // Reiniciar el estado de carga de imágenes
-    imageLoaded.value = {}
-    data.forEach(product => {
-      imageLoaded.value[product.id] = false
-    })
-  } catch (error) {
-    console.error('Error fetching products:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
+// Métodos
 const handleSearch = () => {
-  // Reset to first page when searching
   currentPage.value = 1
 }
 
 const changePage = (page) => {
-  isLoading.value = true
   currentPage.value = page
-  // Scroll to top of the page
   window.scrollTo({ top: 0, behavior: 'smooth' })
-  // Dar tiempo para que el scroll termine antes de mostrar el contenido
-  setTimeout(() => {
-    isLoading.value = false
-  }, 500)
 }
 
-const formatPrice = (price) => {
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(price)
-}
-
-const deleteProduct = async (id) => {
+const handleDelete = async (id) => {
   if (!confirm('¿Estás seguro de que quieres eliminar esta propiedad?')) return
 
   try {
-    const response = await fetch(API_ENDPOINTS.PRODUCTS.DELETE(id), {
-      method: 'DELETE'
-    })
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    await fetchProducts() // Refetch all products
-  } catch (error) {
-    console.error('Error deleting product:', error)
+    await deleteProperty(id)
+  } catch (err) {
+    alert('Error al eliminar la propiedad')
   }
 }
 
-// Watch for changes in searchTerm with debouncing
+// Watchers
 watch(searchTerm, () => {
   if (searchTimeout) {
     clearTimeout(searchTimeout)
@@ -227,7 +179,8 @@ watch(searchTerm, () => {
   }, 300)
 })
 
+// Lifecycle
 onMounted(() => {
-  fetchProducts()
+  loadProperties()
 })
 </script>

@@ -1,45 +1,35 @@
-# Etapa de construcción del frontend
-FROM node:16-alpine as frontend-builder
+# Etapa de construcción
+FROM node:20-alpine as build-stage
 
 WORKDIR /app
 
 # Copiar archivos de configuración
-COPY frontend/package*.json ./
-COPY frontend/vite.config.js ./
-COPY frontend/postcss.config.js ./
-COPY frontend/tailwind.config.js ./
+COPY package*.json ./
+COPY vite.config.js ./
+COPY postcss.config.js ./
+COPY tailwind.config.js ./
 
 # Instalar dependencias
 RUN npm ci --legacy-peer-deps
 
 # Copiar código fuente
-COPY frontend/src ./src
-COPY frontend/index.html ./
+COPY src ./src
+COPY index.html ./
 
 # Construir para producción
 RUN npm run build
 
-# Etapa de construcción del backend
-FROM python:3.9-slim
+# Etapa de producción
+FROM nginx:stable-alpine as production-stage
 
-WORKDIR /app
+# Copiar archivos construidos
+COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# Copiar requirements.txt y instalar dependencias
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copiar el código del backend
-COPY main.py .
-
-# Copiar los archivos construidos del frontend
-COPY --from=frontend-builder /app/frontend/dist ./static
-
-# Variables de entorno
-ENV PORT=8000
-ENV HOST=0.0.0.0
+# Copiar configuración de nginx
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Exponer puerto
-EXPOSE 8000
+EXPOSE 80
 
-# Comando para iniciar la aplicación
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Comando para iniciar nginx
+CMD ["nginx", "-g", "daemon off;"]
