@@ -7,7 +7,7 @@ import { apiClient } from './apiClient'
 class PropertyApiService {
   constructor(client) {
     this.client = client
-    this.basePath = '/products'
+    this.basePath = '/api/products'
   }
 
   async getAll() {
@@ -29,7 +29,19 @@ class PropertyApiService {
   async delete(id) {
     return await this.client.delete(`${this.basePath}/${id}`)
   }
+
+  async searchWithIA(data) {
+    return await this.client.post('/api/search-ia', data)
+  }
+
+  async searchRealStateWithIA(data) {
+    return await this.client.post('/api/search-ia-real-state', data)
+  }
 }
 
 // Export singleton instance
 export const propertyApiService = new PropertyApiService(apiClient)
+
+// Export convenience functions
+export const searchWithIA = (data) => propertyApiService.searchWithIA(data)
+export const searchRealStateWithIA = (data) => propertyApiService.searchRealStateWithIA(data)

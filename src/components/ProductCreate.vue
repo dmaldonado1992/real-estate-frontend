@@ -1,40 +1,42 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div class="max-w-md mx-auto bg-white rounded-lg overflow-hidden shadow-md">
-      <div class="px-6 py-4">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Crear Nueva Propiedad</h2>
-        <form @submit.prevent="createProduct">
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="titulo">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white shadow-sm border border-gray-100 p-8">
+      <div class="mb-8">
+        <h2 class="text-xl font-bold tracking-tight text-gray-900 uppercase">Crear Nueva Propiedad</h2>
+      </div>
+      <form @submit.prevent="createProduct">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="md:col-span-2">
+            <label class="block text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide" for="titulo">
               Título
             </label>
             <input 
               v-model="formData.titulo"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              class="w-full py-3 px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               id="titulo"
               type="text"
               required
             >
           </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="descripcion">
+          <div class="md:col-span-2">
+            <label class="block text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide" for="descripcion">
               Descripción
             </label>
             <textarea 
               v-model="formData.descripcion"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              class="w-full py-3 px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               id="descripcion"
-              rows="3"
+              rows="4"
               required
             ></textarea>
           </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo">
+          <div>
+            <label class="block text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide" for="tipo">
               Tipo de Propiedad
             </label>
             <select 
               v-model="formData.tipo"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              class="w-full py-3 px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               id="tipo"
               required
             >
@@ -43,117 +45,114 @@
               <option value="terreno">Terreno</option>
             </select>
           </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="precio">
+          <div>
+            <label class="block text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide" for="precio">
               Precio
             </label>
             <input 
               v-model="formData.precio"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              class="w-full py-3 px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               id="precio"
               type="number"
               step="0.01"
               required
             >
           </div>
-          <div class="grid grid-cols-3 gap-4">
-            <div class="mb-4">
-              <label class="block text-gray-700 text-sm font-bold mb-2" for="habitaciones">
-                Habitaciones
-              </label>
-              <input 
-                v-model="formData.habitaciones"
-                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="habitaciones"
-                type="number"
-                min="0"
-                step="1"
-                required
-              >
-            </div>
-            <div class="mb-4">
-              <label class="block text-gray-700 text-sm font-bold mb-2" for="banos">
-                Baños
-              </label>
-              <input 
-                v-model="formData.banos"
-                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="banos"
-                type="number"
-                min="0"
-                step="0.5"
-                required
-              >
-            </div>
-            <div class="mb-4">
-              <label class="block text-gray-700 text-sm font-bold mb-2" for="area_m2">
-                Área (m²)
-              </label>
-              <input 
-                v-model="formData.area_m2"
-                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="area_m2"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-              >
-            </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide" for="habitaciones">
+              Habitaciones
+            </label>
+            <input 
+              v-model="formData.habitaciones"
+              class="w-full py-3 px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              id="habitaciones"
+              type="number"
+              min="0"
+              step="1"
+              required
+            >
           </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="ubicacion">
+          <div>
+            <label class="block text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide" for="banos">
+              Baños
+            </label>
+            <input 
+              v-model="formData.banos"
+              class="w-full py-3 px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              id="banos"
+              type="number"
+              min="0"
+              step="0.5"
+              required
+            >
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide" for="area_m2">
+              Área (m²)
+            </label>
+            <input 
+              v-model="formData.area_m2"
+              class="w-full py-3 px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              id="area_m2"
+              type="number"
+              min="0"
+              step="0.01"
+              required
+            >
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide" for="ubicacion">
               Ubicación
             </label>
             <input 
               v-model="formData.ubicacion"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              class="w-full py-3 px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               id="ubicacion"
               type="text"
               required
             >
           </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="imagen_url">
+          <div class="md:col-span-2">
+            <label class="block text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide" for="imagen_url">
               URL de la Imagen
             </label>
             <input 
               v-model="formData.imagen_url"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              class="w-full py-3 px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               id="imagen_url"
               type="url"
               required
             >
           </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2">
+          <div v-if="formData.imagen_url" class="md:col-span-2">
+            <label class="block text-gray-700 text-sm font-semibold mb-2 uppercase tracking-wide">
               Vista Previa
             </label>
             <img 
-              v-if="formData.imagen_url"
               :src="formData.imagen_url"
               :alt="formData.titulo"
-              class="w-full h-48 object-cover rounded"
+              class="w-full h-64 object-cover"
             >
           </div>
-          <div v-if="error" class="mb-4 text-red-500 text-sm font-bold">
-            {{ error }}
-          </div>
-          <div class="flex items-center justify-between">
-            <button 
-              type="submit"
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Crear Producto
-            </button>
-            <router-link 
-              to="/products"
-              class="text-blue-500 hover:text-blue-800"
-            >
-              Cancelar
-            </router-link>
-          </div>
-        </form>
-      </div>
+        </div>
+        <div v-if="error" class="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 text-sm">
+          {{ error }}
+        </div>
+        <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+          <router-link 
+            to="/products"
+            class="text-gray-600 hover:text-gray-900 font-semibold text-sm uppercase tracking-wider transition-colors"
+          >
+            Cancelar
+          </router-link>
+          <button 
+            type="submit"
+            class="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-2.5 px-8 transition-colors uppercase tracking-wider text-sm"
+          >
+            Crear Propiedad
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
@@ -238,17 +237,19 @@ const createProduct = async () => {
     if (response.ok) {
       router.push('/products');
     } else {
-      const errorData = await response.json();
-      if (response.status === 422) {
-        error.value = 'Error de validación: Verifica que todos los campos tengan el formato correcto';
+      // Mostrar error amigable sin detalles técnicos
+      if (response.status === 422 || response.status === 400) {
+        error.value = 'Por favor, verifica que todos los campos estén completos y tengan el formato correcto.';
+      } else if (response.status >= 500) {
+        error.value = 'El servicio no está disponible en este momento. Por favor, intenta de nuevo más tarde.';
       } else {
-        error.value = errorData.detail || 'Error al crear el producto';
+        error.value = 'No se pudo crear la propiedad. Por favor, intenta de nuevo.';
       }
-      console.error('Server error:', errorData);
+      console.error('Server error:', response.status);
     }
-  } catch (error) {
-    console.error('Error creating product:', error);
-    error.value = 'Error al conectar con el servidor';
+  } catch (err) {
+    console.error('Error creating product:', err);
+    error.value = 'No se pudo conectar con el servidor. Por favor, verifica tu conexión e intenta de nuevo.';
   }
 }
 </script>

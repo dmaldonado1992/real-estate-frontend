@@ -2,25 +2,47 @@
 // Composable para gestión de propiedades (Single Responsibility Principle)
 import { ref, readonly } from 'vue'
 import { propertyApiService } from './propertyApiService'
+import { useSharedProperties } from './useSharedProperties'
 
 export function usePropertyService() {
   const properties = ref([])
   const currentProperty = ref(null)
   const isLoading = ref(false)
   const error = ref(null)
+  
+  // Integrar estado compartido del ChatBox
+  const { mergeWithChatResults, clearChatResults } = useSharedProperties()
 
   const loadProperties = async () => {
     isLoading.value = true
     error.value = null
     try {
+      // El backend ya implementa fallback a JSON automáticamente
+      // cuando la BD está vacía, así que solo necesitamos una llamada
       const data = await propertyApiService.getAll()
-      properties.value = data
+      const dbProperties = data || []
+      
+      // Fusionar con resultados del ChatBox si los hay
+      properties.value = mergeWithChatResults(dbProperties)
+      
+      if (properties.value.length > 0) {
+        console.log(`Cargadas ${properties.value.length} propiedades (BD o JSON fallback)`)
+      } else {
+        console.log('No hay propiedades disponibles')
+      }
     } catch (err) {
       error.value = err.message
       console.error('Error loading properties:', err)
+      properties.value = []
     } finally {
       isLoading.value = false
     }
+  }
+  
+  const resetToAllProperties = async () => {
+    // Limpiar resultados del chat y recargar todas las propiedades
+    clearChatResults()
+    await loadProperties()
   }
 
   const loadProperty = async (id) => {
@@ -99,6 +121,7 @@ export function usePropertyService() {
     loadProperty,
     createProperty,
     updateProperty,
-    deleteProperty
+    deleteProperty,
+    resetToAllProperties
   }
 }

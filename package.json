@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "set \"NODE_OPTIONS=--max-old-space-size=8192 --no-warnings\" && vite",
+    "build": "set \"NODE_OPTIONS=--max-old-space-size=8192\" && vite build",
+    "preview": "vite preview",
+    "clean": "rmdir /s /q node_modules && rmdir /s /q dist && npm install"
   },
   "dependencies": {
     "vue": "^3.5.22",
