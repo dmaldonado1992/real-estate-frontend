@@ -235,6 +235,11 @@ const createProduct = async () => {
     });
     
     if (response.ok) {
+      // Disparar eventos globales para recargar la lista y mostrar 'Ver todas'
+      try {
+        window.dispatchEvent(new CustomEvent('products-updated'))
+        window.dispatchEvent(new CustomEvent('products-select-all'))
+      } catch(e) {}
       router.push('/products');
     } else {
       // Mostrar error amigable sin detalles técnicos

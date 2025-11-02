@@ -143,10 +143,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import ChatBox from './components/ChatBox.vue'
 
 const mobileMenuOpen = ref(false)
+const router = useRouter()
+
+onMounted(() => {
+  window.dispatchEvent(new CustomEvent('products-select-all'))
+  router.afterEach(() => {
+    window.dispatchEvent(new CustomEvent('products-select-all'))
+  })
+})
 </script>
 
 <style scoped>

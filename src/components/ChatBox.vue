@@ -185,8 +185,8 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, computed } from 'vue'
-import { searchWithIA, searchRealStateWithIA } from '../composables/propertyApiService'
+import { ref, nextTick, onMounted, onUnmounted, computed } from 'vue'
+import { propertyApiService, searchWithIA, searchRealStateWithIA } from '../composables/propertyApiService'
 import { useSharedProperties } from '../composables/useSharedProperties'
 
 const isOpen = ref(false)
@@ -197,7 +197,7 @@ const unreadCount = ref(0)
 const messagesContainer = ref(null)
 
 // Estado compartido para sincronizar con lista de propiedades
-const { updatePropertiesFromChat } = useSharedProperties()
+const { updatePropertiesFromChat, clearChatResults } = useSharedProperties()
 
 // Detectar si hay resultados de búsqueda para expandir el chat
 const hasSearchResults = computed(() => {
@@ -209,7 +209,7 @@ const hasSearchResults = computed(() => {
 // Limitar tamaño de mensajes para evitar uso excesivo de memoria en el cliente
 const MAX_MESSAGE_LENGTH = 3000 // caracteres
 
-const pushBotMessage = (payload) => {
+const pushBotMessage = (payload, isUserSearch = false) => {
   const fullText = (payload.text || '').toString()
   const truncated = fullText.length > MAX_MESSAGE_LENGTH
   const messageText = truncated ? fullText.slice(0, MAX_MESSAGE_LENGTH) + '...' : fullText
@@ -226,8 +226,9 @@ const pushBotMessage = (payload) => {
   })
   
   // Actualizar estado compartido si hay propiedades
+  // isUserSearch indica si es una búsqueda real del usuario (mostrar banner)
   if (payload.properties && payload.properties.length > 0) {
-    updatePropertiesFromChat(payload.properties)
+    updatePropertiesFromChat(payload.properties, isUserSearch)
   }
 }
 
@@ -377,16 +378,24 @@ const sendMessage = async (text) => {
     
   if (isPropertyRelated) {
       // Usar búsqueda de propiedades con IA (real state)
+      console.log('🔍 Query enviado a searchRealStateWithIA:', text)
+      
       response = await searchRealStateWithIA({
         query: text,
         use_cloud: true
+      })
+      
+      console.log('📊 Respuesta de searchRealStateWithIA:', {
+        analysis: response.analysis,
+        metadata: response.metadata,
+        properties_count: response.properties?.length || 0
       })
 
       pushBotMessage({
         text: response.analysis,
         properties: response.properties || [],
         keywords: response.keywords || []
-      })
+      }, true) // true = búsqueda del usuario
     } else {
       // Usar búsqueda general con IA
       response = await searchWithIA({
@@ -401,7 +410,7 @@ const sendMessage = async (text) => {
         text: response.response || response.analysis,
         properties: hasProperties ? response.properties : [],
         keywords: response.keywords || []
-      })
+      }, true) // true = búsqueda del usuario
     }
 
     if (!isOpen.value) {
@@ -461,13 +470,40 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('es-ES').format(price)
 }
 
-onMounted(() => {
-  // Mensaje de bienvenida automático después de 1 segundo
-  setTimeout(() => {
-    if (messages.value.length === 0 && !isOpen.value) {
-      unreadCount.value = 1
+// Función para recargar propiedades
+const reloadPropertiesFromDB = async () => {
+  try {
+    console.log('🔄 ChatBox: Recargando propiedades desde BD...')
+    clearChatResults()
+    const response = await propertyApiService.getAll()
+    await nextTick()
+    
+    // El backend puede devolver response.products o directamente un array
+    const products = Array.isArray(response) ? response : (response.products || response || [])
+    
+    if (products && products.length > 0) {
+      // false = NO es búsqueda del usuario, no mostrar banner
+      updatePropertiesFromChat(products, false)
+      console.log(`✅ ChatBox: ${products.length} propiedades recargadas`)
     }
-  }, 1000)
+  } catch (error) {
+    console.error('❌ Error cargando propiedades:', error)
+  }
+}
+
+onMounted(async () => {
+  // Carga inicial
+  await reloadPropertiesFromDB()
+  
+  // Listeners para recargar después de CRUD
+  window.addEventListener('products-updated', reloadPropertiesFromDB)
+  window.addEventListener('products-select-all', reloadPropertiesFromDB)
+  
+  // Cleanup
+  onUnmounted(() => {
+    window.removeEventListener('products-updated', reloadPropertiesFromDB)
+    window.removeEventListener('products-select-all', reloadPropertiesFromDB)
+  })
 })
 </script>
 
@@ -546,8 +582,8 @@ onMounted(() => {
 
 .chat-window {
   width: 420px;
-  min-height: 600px;
-  max-height: 80vh;
+  min-height: 550px;
+  max-height: 75vh;
   background: white;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
@@ -560,8 +596,8 @@ onMounted(() => {
 
 .chat-window-expanded {
   width: 450px;
-  min-height: 650px;
-  max-height: 85vh;
+  min-height: 550px;
+  max-height: 70vh;
 }
 
 @keyframes slideUp {

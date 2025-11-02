@@ -17,22 +17,25 @@ export function usePropertyService() {
     isLoading.value = true
     error.value = null
     try {
+      console.log('🔄 Cargando propiedades desde el backend...')
       // El backend ya implementa fallback a JSON automáticamente
       // cuando la BD está vacía, así que solo necesitamos una llamada
       const data = await propertyApiService.getAll()
-      const dbProperties = data || []
+      
+      // El backend puede devolver data.products o directamente un array
+      const dbProperties = Array.isArray(data) ? data : (data.products || data || [])
       
       // Fusionar con resultados del ChatBox si los hay
       properties.value = mergeWithChatResults(dbProperties)
       
       if (properties.value.length > 0) {
-        console.log(`Cargadas ${properties.value.length} propiedades (BD o JSON fallback)`)
+        console.log(`✅ Cargadas ${properties.value.length} propiedades (BD o JSON fallback)`)
       } else {
-        console.log('No hay propiedades disponibles')
+        console.log('⚠️ No hay propiedades disponibles')
       }
     } catch (err) {
       error.value = err.message
-      console.error('Error loading properties:', err)
+      console.error('❌ Error loading properties:', err)
       properties.value = []
     } finally {
       isLoading.value = false
@@ -99,7 +102,9 @@ export function usePropertyService() {
     error.value = null
     try {
       await propertyApiService.delete(id)
-      properties.value = properties.value.filter(p => p.id !== id)
+      // Recargar todas las propiedades desde el backend para asegurar sincronización
+      await loadProperties()
+      console.log('✅ Propiedad eliminada y lista recargada')
     } catch (err) {
       error.value = err.message
       console.error(`Error deleting property ${id}:`, err)

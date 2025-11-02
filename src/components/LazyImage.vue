@@ -123,7 +123,6 @@ const currentImageSrc = computed(() => {
 
 // Manejo de eventos de imagen principal
 const handleImageLoad = () => {
-  console.log('✅ Imagen cargada exitosamente:', props.src)
   isImageVisible.value = true
   isLoading.value = false
   hasError.value = false
@@ -136,14 +135,12 @@ const handleImageError = (e) => {
   
   if (retryCount.value < maxRetries) {
     retryCount.value++
-    console.log(`🔄 Reintentando (${retryCount.value}/${maxRetries})...`)
     setTimeout(() => {
       // Retry with cache busting
       const retryUrl = primaryImageSrc.value + (primaryImageSrc.value.includes('?') ? '&' : '?') + `retry=${retryCount.value}`
       currentImageSrc.value = retryUrl
     }, 1000 * retryCount.value)
   } else {
-    console.log('📦 Usando imagen de fallback...')
     showFallback.value = true
     isLoading.value = false
   }
@@ -151,7 +148,6 @@ const handleImageError = (e) => {
 
 // Manejo de eventos de imagen de fallback
 const handleFallbackLoad = () => {
-  console.log('✅ Imagen de fallback cargada')
   isImageVisible.value = true
   isLoading.value = false
   hasError.value = false
@@ -169,7 +165,6 @@ const handleFallbackError = () => {
 
 // Reintentar carga manual
 const retryImageLoad = () => {
-  console.log('🔄 Reintento manual de carga de imagen')
   hasError.value = false
   isLoading.value = true
   isImageVisible.value = false

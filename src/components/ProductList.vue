@@ -129,7 +129,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { usePropertyService } from '../composables/usePropertyService'
 import { useSharedProperties } from '../composables/useSharedProperties'
 import { useFormatter } from '../composables/useFormatter'
@@ -176,6 +176,8 @@ const products = computed(() => {
 // Métodos
 const handleSearch = () => {
   currentPage.value = 1
+  // Enviar búsqueda al ChatBox
+  window.dispatchEvent(new CustomEvent('chatbox-search', { detail: searchTerm.value }))
 }
 
 const changePage = (page) => {
@@ -188,6 +190,11 @@ const handleDelete = async (id) => {
 
   try {
     await deleteProperty(id)
+    // Disparar eventos globales para recargar la lista y mostrar 'Ver todas'
+    try {
+      window.dispatchEvent(new CustomEvent('products-updated'))
+      window.dispatchEvent(new CustomEvent('products-select-all'))
+    } catch(e) {}
   } catch (err) {
     alert('Error al eliminar la propiedad')
   }
@@ -204,6 +211,13 @@ watch(searchTerm, () => {
   if (searchTimeout) {
     clearTimeout(searchTimeout)
   }
+  
+  // Si el filtro se limpia y hay resultados del chat, no hacer nada
+  // (dejar que el watcher de chatUpdateCounter maneje la recarga)
+  if (searchTerm.value === '' && shouldUpdateFromChat.value) {
+    return
+  }
+  
   searchTimeout = setTimeout(() => {
     handleSearch()
   }, 300)
@@ -211,9 +225,16 @@ watch(searchTerm, () => {
 
 // Watch para recargar cuando cambien los resultados del chat
 // Usamos chatUpdateCounter que se incrementa cada vez que llegan nuevos resultados
-watch(chatUpdateCounter, async (newVal) => {
-  if (newVal > 0) {
+watch(chatUpdateCounter, async (newVal, oldVal) => {
+  if (newVal > 0 && newVal !== oldVal) {
     console.log(`🔄 ProductList detectó actualización del ChatBox (#${newVal})`)
+    
+    // Limpiar el filtro del buscador general para mostrar resultados del ChatBox
+    if (searchTerm.value !== '') {
+      console.log('🧹 Limpiando filtro de búsqueda general...')
+      searchTerm.value = ''
+    }
+    
     // Recargar propiedades para obtener los resultados del chat
     await loadProperties()
     currentPage.value = 1
@@ -223,5 +244,28 @@ watch(chatUpdateCounter, async (newVal) => {
 // Lifecycle
 onMounted(() => {
   loadProperties()
+  
+  // Listeners para recargar después de CRUD
+  const onProductsUpdated = async () => {
+    console.log('🔄 ProductList: Evento products-updated recibido')
+    await loadProperties()
+    currentPage.value = 1
+  }
+  
+  const onProductsSelectAll = async () => {
+    console.log('🔄 ProductList: Evento products-select-all recibido')
+    searchTerm.value = ''
+    currentPage.value = 1
+    await resetToAllProperties()
+  }
+  
+  window.addEventListener('products-updated', onProductsUpdated)
+  window.addEventListener('products-select-all', onProductsSelectAll)
+  
+  // Cleanup en onUnmounted
+  onUnmounted(() => {
+    window.removeEventListener('products-updated', onProductsUpdated)
+    window.removeEventListener('products-select-all', onProductsSelectAll)
+  })
 })
 </script>
